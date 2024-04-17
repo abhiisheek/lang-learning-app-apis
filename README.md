@@ -10,4 +10,4 @@ This express app contains all the APIs required for the _Language Leaning App_
 4. Open terminal, go to the project directory and run below commands
    
         npm i
-        npm run build
+        npm start
