@@ -2,14 +2,19 @@ const mongoose = require("mongoose");
 
 const courseSchema = mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
-  name: { type: String, required: true },
+  title: { type: String, required: true },
+  description: { type: String, required: true },
   level: {
-    type: String,
+    type: Number,
     required: true,
-    enum: ["Beginner", "Intermediate", "Advanced"],
+    enum: [1, 2, 3],
   },
-  language: { type: String, required: true },
-  contents: { type: String, required: true },
+  langId: { type: Number, required: true },
+  contents: {
+    youtubeVideoSrcId: { type: String },
+    audioSrc: { type: String },
+    textContent: { type: String },
+  },
 });
 
 module.exports = mongoose.model("Course", courseSchema);
