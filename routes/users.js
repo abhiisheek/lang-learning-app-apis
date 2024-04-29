@@ -1,5 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+
+const secret = require("../secret");
 
 const router = express.Router();
 
@@ -49,17 +52,25 @@ router.post("/login", (req, res, next) => {
       if (!docs?.length) {
         res.status(400).send("Login Failed!");
       } else {
-        res.send(docs);
+        const token = jwt.sign(
+          {
+            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8,
+            data: docs[0],
+          },
+          secret.key
+        );
+
+        res.send(token);
       }
     });
 });
 
-/* GET users listing. */
-router.get("/", (req, res, next) => {
-  User.find()
-    .select("name email")
-    .exec()
-    .then((docs) => res.send(docs));
-});
+// /* GET users listing. */
+// router.get("/", (req, res, next) => {
+//   User.find()
+//     .select("name email")
+//     .exec()
+//     .then((docs) => res.send(docs));
+// });
 
 module.exports = router;
