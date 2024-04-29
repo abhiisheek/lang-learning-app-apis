@@ -6,11 +6,17 @@ const Course = require("../models/course");
 
 router.get("/", (req, res, next) => {
   try {
-    Course.find()
+    const langId = req.query.langId;
+
+    const filters = langId ? { langId } : {};
+
+    Course.find(filters)
       .lean()
-      .sort("langId")
+      .sort("level")
       .exec()
-      .then((docs) => res.send(docs));
+      .then((docs) => {
+        res.send(docs);
+      });
   } catch (e) {
     res.status(500).send(e);
   }
