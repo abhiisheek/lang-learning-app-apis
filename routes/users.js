@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 
 const secret = require("../secret");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -65,12 +66,63 @@ router.post("/login", (req, res, next) => {
     });
 });
 
-// /* GET users listing. */
+router.put("/prefernces", auth, async (req, res, next) => {
+  const prefernces = req.body.prefernces;
+  const authorization = req.get("Authorization");
+
+  const token = authorization.startsWith("Bearer ") && authorization.slice(7);
+
+  if (!prefernces) {
+    res.status(400).send("Bad Request - Prefernces are missing in payload");
+  }
+
+  try {
+    const data = jwt.verify(token, secret.key);
+
+    const updated = await User.findOneAndUpdate(
+      { email: data.data.email },
+      {
+        prefernces: prefernces,
+      },
+      {
+        new: true,
+      }
+    );
+    res.send(updated.prefernces);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.get("/prefernces", auth, async (req, res, next) => {
+  const authorization = req.get("Authorization");
+
+  const token = authorization.startsWith("Bearer ") && authorization.slice(7);
+
+  try {
+    const data = jwt.verify(token, secret.key);
+
+    const userPrefernces = await User.find({ email: data.data.email })
+      .select("prefernces")
+      .exec();
+
+    if (!userPrefernces.length) {
+      res.status(404).send("Failed to get user prefrences");
+    }
+
+    res.send(userPrefernces[0].prefernces);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+/* GET users listing. */
 // router.get("/", (req, res, next) => {
 //   User.find()
-//     .select("name email")
 //     .exec()
-//     .then((docs) => res.send(docs));
+//     .then((docs) => {
+//       res.send(docs);
+//     });
 // });
 
 module.exports = router;
