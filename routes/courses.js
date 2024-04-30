@@ -12,7 +12,7 @@ router.post("/", (req, res, next) => {
 
     Course.find(filters)
       .lean()
-      .sort("level")
+      .sort("langId")
       .exec()
       .then((docs) => {
         res.send(docs);
