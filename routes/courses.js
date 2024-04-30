@@ -4,11 +4,11 @@ const router = express.Router();
 
 const Course = require("../models/course");
 
-router.get("/", (req, res, next) => {
+router.post("/", (req, res, next) => {
   try {
-    const langId = req.query.langId;
+    const langIds = req.body.langIds;
 
-    const filters = langId ? { langId } : {};
+    const filters = Array.isArray(langIds) ? { langId: { $in: langIds } } : {};
 
     Course.find(filters)
       .lean()
