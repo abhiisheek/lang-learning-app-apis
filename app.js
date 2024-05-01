@@ -13,6 +13,7 @@ const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const languagesRouter = require("./routes/languages");
 const coursesRouter = require("./routes/courses");
+const trackersRouter = require("./routes/trackers");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/languages", auth, languagesRouter);
 app.use("/courses", auth, coursesRouter);
+app.use("/trackers", auth, trackersRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
