@@ -7,6 +7,7 @@ const secret = require("../secret");
 const router = express.Router();
 
 const Tracker = require("../models/tracker");
+const { STATUES } = require("../constants");
 
 router.post("/enroll", async (req, res, next) => {
   const courseId = req.body.courseId;
@@ -47,59 +48,40 @@ router.post("/enroll", async (req, res, next) => {
   }
 });
 
-router.post("/start", async (req, res, next) => {
+router.put("/status", async (req, res, next) => {
   const _id = req.body.id;
-  const startedTs = req.body.startedTs;
+  const status = req.body.status;
+  const timestamp = req.body.timestamp;
 
-  if (!_id) {
-    res.status(400).send("Bad Request - id is missing in payload");
-    return;
-  }
-
-  try {
-    const updated = await Tracker.findOneAndUpdate(
-      { _id },
-      {
-        startedTs,
-        status: 2,
-      },
-      {
-        new: true,
-      }
-    );
-
-    res.send(updated);
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
-router.post("/complete", async (req, res, next) => {
-  const _id = req.body.id;
-  const completedTs = req.body.completedTs;
-
-  if (!_id) {
-    res.status(400).send("Bad Request - id is missing in payload");
+  if (
+    !_id ||
+    (status !== STATUES.IN_PROGRESS && status !== STATUES.COMPLETED)
+  ) {
+    res.status(400).send("Bad Request - invalid payload");
     return;
   }
 
   try {
     const doc = await Tracker.findOne({ _id });
 
-    if (doc?.status !== 2) {
+    if (doc?.status !== STATUES.NOT_STARTED && status === STATUES.IN_PROGRESS) {
+      res.status(400).send("Course is not in right status to start it.");
+      return;
+    }
+
+    if (doc?.status !== STATUES.IN_PROGRESS && status === STATUES.COMPLETED) {
       res
         .status(400)
-        .send(
-          "Bad Request - Course is not in started status to mark it as complete"
-        );
+        .send("Course is not in right status to mark it as complete.");
       return;
     }
 
     const updated = await Tracker.findOneAndUpdate(
       { _id },
       {
-        completedTs,
-        status: 3,
+        [status === STATUES.IN_PROGRESS ? "startedTs" : "completedTs"]:
+          timestamp,
+        status: status,
       },
       {
         new: true,
@@ -111,14 +93,5 @@ router.post("/complete", async (req, res, next) => {
     res.status(500).send(err);
   }
 });
-
-/* GET users listing. */
-// router.get("/", (req, res, next) => {
-//   User.find()
-//     .exec()
-//     .then((docs) => {
-//       res.send(docs);
-//     });
-// });
 
 module.exports = router;
