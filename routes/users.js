@@ -82,14 +82,14 @@ router.post("/login", (req, res, next) => {
     );
 });
 
-router.put("/prefernces", auth, async (req, res, next) => {
-  const prefernces = req.body.prefernces;
+router.put("/preferences", auth, async (req, res, next) => {
+  const preferences = req.body.preferences;
   const authorization = req.get("Authorization");
 
   const token = authorization.startsWith("Bearer ") && authorization.slice(7);
 
-  if (!prefernces) {
-    res.status(400).send("Bad Request - Prefernces are missing in payload");
+  if (!preferences) {
+    res.status(400).send("Bad Request - Preferences are missing in payload");
     return;
   }
 
@@ -99,19 +99,19 @@ router.put("/prefernces", auth, async (req, res, next) => {
     const updated = await User.findOneAndUpdate(
       { email: data.data.email },
       {
-        prefernces: prefernces,
+        preferences: preferences,
       },
       {
         new: true,
       }
     );
-    res.send(updated.prefernces);
+    res.send(updated.preferences);
   } catch (err) {
     res.status(500).send(err);
   }
 });
 
-router.get("/prefernces", auth, async (req, res, next) => {
+router.get("/preferences", auth, async (req, res, next) => {
   const authorization = req.get("Authorization");
 
   const token = authorization.startsWith("Bearer ") && authorization.slice(7);
@@ -119,16 +119,16 @@ router.get("/prefernces", auth, async (req, res, next) => {
   try {
     const data = jwt.verify(token, secret.key);
 
-    const userPrefernces = await User.find({ email: data.data.email })
-      .select("prefernces")
+    const userPreferences = await User.find({ email: data.data.email })
+      .select("preferences")
       .exec();
 
-    if (!userPrefernces.length) {
+    if (!userPreferences.length) {
       res.status(404).send("Failed to get user prefrences");
       return;
     }
 
-    res.send(userPrefernces[0].prefernces);
+    res.send(userPreferences[0].preferences);
   } catch (err) {
     res.status(500).send(err);
   }
@@ -161,6 +161,45 @@ router.get("/courses", auth, async (req, res, next) => {
     });
 
     res.send(Object.values(result));
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.get("/courses/:id", auth, async (req, res, next) => {
+  const id = req.params["id"];
+
+  if (!id) {
+    res.status(404).send("Bad request");
+    return;
+  }
+
+  const authorization = req.get("Authorization");
+
+  const token = authorization.startsWith("Bearer ") && authorization.slice(7);
+
+  try {
+    const data = jwt.verify(token, secret.key);
+
+    const enrolledCourse = await Tracker.findOne({
+      _id: id,
+    }).lean();
+
+    if (!enrolledCourse?._id) {
+      res.status(404).send("Courses not found");
+      return;
+    }
+
+    const course = await Course.findOne({
+      _id: enrolledCourse.courseId,
+    }).lean();
+
+    if (!course?._id) {
+      res.status(404).send("Courses not found");
+      return;
+    }
+
+    res.send({ ...course, ...enrolledCourse });
   } catch (err) {
     res.status(500).send(err);
   }

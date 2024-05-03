@@ -3,7 +3,7 @@ const user = {
   name: "User 1",
   email: "user1@abc.com",
   password: "abc",
-  prefernces: {
+  preferences: {
     selectedLanguageIds: [222],
     // Other perfernces
   },
