@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const secret = require("../secret");
+const User = require("../models/user");
 
 module.exports = (req, res, next) => {
   const authorization = req.get("Authorization");
@@ -14,6 +15,13 @@ module.exports = (req, res, next) => {
   if (token) {
     try {
       const data = jwt.verify(token, secret.key);
+
+      const user = User.findOne({ email: data.data.email }).lean();
+
+      if (!user) {
+        res.status(401).send(`Unauthorized`);
+        return;
+      }
 
       next();
     } catch (err) {

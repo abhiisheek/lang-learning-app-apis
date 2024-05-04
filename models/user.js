@@ -8,6 +8,9 @@ const userSchema = mongoose.Schema({
   preferences: {
     langs: { type: Object },
   },
+  assessments: {
+    type: Object,
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

@@ -96,10 +96,35 @@ router.put("/preferences", auth, async (req, res, next) => {
   try {
     const data = jwt.verify(token, secret.key);
 
+    const details = await User.findOneAndUpdate({
+      email: data.data.email,
+    }).lean();
+
+    if (!details) {
+      res.status(404).send("User not found");
+      return;
+    }
+
+    const assessments = { ...details.assessments };
+
+    Object.values(preferences.langs).forEach((item) => {
+      if (!assessments[item._id]) {
+        assessments[item._id] = {
+          _id: item._id,
+          label: item.label,
+          proficiency: 0,
+          enrolledCourses: {},
+          startedCourses: {},
+          completedCourses: {},
+        };
+      }
+    });
+
     const updated = await User.findOneAndUpdate(
       { email: data.data.email },
       {
-        preferences: preferences,
+        preferences,
+        assessments,
       },
       {
         new: true,
@@ -114,21 +139,42 @@ router.put("/preferences", auth, async (req, res, next) => {
 router.get("/preferences", auth, async (req, res, next) => {
   const authorization = req.get("Authorization");
 
-  const token = authorization.startsWith("Bearer ") && authorization.slice(7);
-
   try {
+    const token = authorization.startsWith("Bearer ") && authorization.slice(7);
+
     const data = jwt.verify(token, secret.key);
 
-    const userPreferences = await User.find({ email: data.data.email })
-      .select("preferences")
-      .exec();
+    const user = await User.findOne({ email: data.data.email }).lean();
 
-    if (!userPreferences.length) {
+    if (!user.preferences) {
       res.status(404).send("Failed to get user prefrences");
       return;
     }
 
-    res.send(userPreferences[0].preferences);
+    res.send(user.preferences);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.get("/assessments", auth, async (req, res, next) => {
+  const authorization = req.get("Authorization");
+
+  try {
+    const token = authorization.startsWith("Bearer ") && authorization.slice(7);
+
+    const data = jwt.verify(token, secret.key);
+
+    const user = await User.findOne({
+      email: data.data.email,
+    }).lean();
+
+    if (!user.assessments) {
+      res.status(404).send("Failed to get user assessments");
+      return;
+    }
+
+    res.send(user.assessments);
   } catch (err) {
     res.status(500).send(err);
   }

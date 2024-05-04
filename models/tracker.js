@@ -12,6 +12,12 @@ const trackerSchema = mongoose.Schema({
   enrolledTs: { type: Number },
   startedTs: { type: Number },
   completedTs: { type: Number },
+  level: {
+    type: Number,
+    required: true,
+    enum: [1, 2, 3],
+  },
+  langId: { type: Number, required: true },
 });
 
 module.exports = mongoose.model("Tracker", trackerSchema);
