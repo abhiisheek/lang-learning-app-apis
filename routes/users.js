@@ -26,18 +26,28 @@ router.post("/signup", async (req, res, next) => {
     .then(
       async (docs) => {
         if (docs?.length) {
-          res.status(400).send("User already exists");
+          res.status(400).send("User already exists. Please try loging in.");
         } else {
           const newUser = new User({
             _id: new mongoose.Types.ObjectId(),
             name,
             email,
             password,
+            preferences: { langs: {} },
+            assessments: {},
           });
 
           await newUser.save();
 
-          res.send(newUser);
+          const token = jwt.sign(
+            {
+              exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8,
+              data: { name: newUser.name, email: newUser.email },
+            },
+            secret.key
+          );
+
+          res.send(token);
         }
       },
       (err) => {
@@ -96,7 +106,7 @@ router.put("/preferences", auth, async (req, res, next) => {
   try {
     const data = jwt.verify(token, secret.key);
 
-    const details = await User.findOneAndUpdate({
+    const details = await User.findOne({
       email: data.data.email,
     }).lean();
 

@@ -23,17 +23,16 @@ router.post("/enroll", async (req, res, next) => {
   }
 
   try {
-    Tracker.find({ courseId })
+    const token = authorization.startsWith("Bearer ") && authorization.slice(7);
+    const data = jwt.verify(token, secret.key);
+
+    Tracker.find({ courseId, userEmail: data.data.email })
       .exec()
       .then(async (docs) => {
         if (docs?.length) {
           res.status(400).send("User already enrolled to the course");
         } else {
-          const token =
-            authorization.startsWith("Bearer ") && authorization.slice(7);
-          const data = jwt.verify(token, secret.key);
-
-          const user = await User.findOneAndUpdate({
+          const user = await User.findOne({
             email: data.data.email,
           }).lean();
 
