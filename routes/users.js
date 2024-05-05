@@ -146,6 +146,47 @@ router.put("/preferences", auth, async (req, res, next) => {
   }
 });
 
+router.put("/changePassword", auth, async (req, res, next) => {
+  const newPassword = req.body.newPassword;
+  const oldPassword = req.body.oldPassword;
+  const authorization = req.get("Authorization");
+
+  const token = authorization.startsWith("Bearer ") && authorization.slice(7);
+
+  if (!newPassword || !oldPassword) {
+    res.status(400).send("Bad Request - Preferences are missing in payload");
+    return;
+  }
+
+  try {
+    const data = jwt.verify(token, secret.key);
+
+    const details = await User.findOne({
+      email: data.data.email,
+      password: oldPassword,
+    }).lean();
+
+    if (!details) {
+      res.status(404).send("User details not matching");
+      return;
+    }
+
+    await User.findOneAndUpdate(
+      { email: data.data.email },
+      {
+        password: newPassword,
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.send("Success");
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
 router.get("/preferences", auth, async (req, res, next) => {
   const authorization = req.get("Authorization");
 

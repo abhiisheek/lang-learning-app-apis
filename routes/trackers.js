@@ -97,7 +97,7 @@ router.put("/status", async (req, res, next) => {
     const data = jwt.verify(token, secret.key);
 
     const doc = await Tracker.findOne({ _id }).lean();
-    const user = await User.findOneAndUpdate({
+    const user = await User.findOne({
       email: data.data.email,
     }).lean();
 
